@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lacak Laporan - WhistleGuard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="navbar-brand"><span class="shield">🛡️</span> WhistleGuard</a>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <ul class="nav-links">
+      <li><a href="/">Beranda</a></li>
+      <li><a href="/submit.html">Buat Laporan</a></li>
+      <li><a href="/track.html" class="active">Lacak Laporan</a></li>
+      <li><a href="/admin.html" class="btn-nav">Admin</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-container container">
+    <div style="text-align:center;margin-bottom:32px">
+      <h1 style="font-size:2rem;margin-bottom:8px">🔍 Lacak Status Laporan</h1>
+      <p style="color:var(--text-secondary)">Masukkan nomor tiket untuk melihat perkembangan laporan Anda</p>
+    </div>
+
+    <div class="card" style="max-width:640px;margin:0 auto">
+      <div class="track-input-group">
+        <input type="text" class="form-control" id="ticketInput" placeholder="Contoh: WB-XXXXXX-XXXXXX">
+        <button class="btn btn-primary" onclick="trackReport()">Lacak</button>
+      </div>
+
+      <div id="alertBox" class="alert mt-2"><span id="alertMsg"></span></div>
+
+      <div id="trackResult" class="hidden mt-3">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+          <div>
+            <h3 id="resSubject"></h3>
+            <p style="font-size:0.85rem;color:var(--text-muted)" id="resTicket"></p>
+          </div>
+          <span id="resBadge" class="badge"></span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+          <div style="background:var(--bg-primary);padding:12px;border-radius:8px">
+            <p style="font-size:0.8rem;color:var(--text-muted)">Kategori</p>
+            <p style="font-weight:600" id="resCategory"></p>
+          </div>
+          <div style="background:var(--bg-primary);padding:12px;border-radius:8px">
+            <p style="font-size:0.8rem;color:var(--text-muted)">Tingkat</p>
+            <p style="font-weight:600" id="resSeverity"></p>
+          </div>
+          <div style="background:var(--bg-primary);padding:12px;border-radius:8px">
+            <p style="font-size:0.8rem;color:var(--text-muted)">Dilaporkan</p>
+            <p style="font-weight:600" id="resDate"></p>
+          </div>
+          <div style="background:var(--bg-primary);padding:12px;border-radius:8px">
+            <p style="font-size:0.8rem;color:var(--text-muted)">Terakhir Update</p>
+            <p style="font-weight:600" id="resUpdated"></p>
+          </div>
+        </div>
+
+        <div id="adminNotesSection" class="hidden" style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);padding:16px;border-radius:8px;margin-bottom:20px">
+          <p style="font-size:0.85rem;font-weight:600;color:var(--accent);margin-bottom:4px">📋 Catatan Admin:</p>
+          <p style="font-size:0.9rem;color:var(--text-secondary)" id="resAdminNotes"></p>
+        </div>
+
+        <h4 style="margin-bottom:12px">💬 Komunikasi</h4>
+        <div id="messagesArea" class="timeline"></div>
+
+        <div style="margin-top:16px">
+          <textarea class="form-control" id="newMessage" placeholder="Tulis pesan tindak lanjut..." style="min-height:80px"></textarea>
+          <button class="btn btn-primary btn-sm mt-1" onclick="sendMessage()">Kirim Pesan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>🛡️ WhistleGuard &copy; 2024 — Semua laporan bersifat rahasia</p>
+  </footer>
+
+  <script>
+    const statusMap = { pending:'Menunggu', investigating:'Investigasi', resolved:'Selesai', dismissed:'Ditolak' };
+    const sevMap = { low:'Rendah', medium:'Sedang', high:'Tinggi', critical:'Kritis' };
+    const catMap = { korupsi:'Korupsi', fraud:'Fraud', penyuapan:'Penyuapan', pelecehan:'Pelecehan', diskriminasi:'Diskriminasi', pelanggaran_etika:'Pelanggaran Etika', penyalahgunaan_wewenang:'Penyalahgunaan Wewenang', pelanggaran_hukum:'Pelanggaran Hukum', keselamatan_kerja:'Keselamatan Kerja', lingkungan:'Lingkungan', lainnya:'Lainnya' };
+    let currentTicket = '';
+
+    function showAlert(type, msg) {
+      const box = document.getElementById('alertBox');
+      box.className = 'alert show alert-' + type;
+      document.getElementById('alertMsg').textContent = msg;
+    }
+
+    function fmtDate(d) { return d ? new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '-'; }
+
+    async function trackReport() {
+      const ticket = document.getElementById('ticketInput').value.trim();
+      if (!ticket) return showAlert('error','Masukkan nomor tiket');
+      currentTicket = ticket;
+
+      try {
+        const res = await fetch('/api/reports/track/' + ticket);
+        if (!res.ok) { showAlert('error','Laporan tidak ditemukan'); document.getElementById('trackResult').classList.add('hidden'); return; }
+        const d = await res.json();
+
+        document.getElementById('alertBox').classList.remove('show');
+        document.getElementById('resSubject').textContent = d.subject;
+        document.getElementById('resTicket').textContent = d.ticket_id;
+        document.getElementById('resCategory').textContent = catMap[d.category] || d.category;
+        document.getElementById('resSeverity').textContent = sevMap[d.severity] || d.severity;
+        document.getElementById('resDate').textContent = fmtDate(d.created_at);
+        document.getElementById('resUpdated').textContent = fmtDate(d.updated_at);
+
+        const badge = document.getElementById('resBadge');
+        badge.textContent = statusMap[d.status] || d.status;
+        badge.className = 'badge badge-' + d.status;
+
+        if (d.admin_notes) {
+          document.getElementById('resAdminNotes').textContent = d.admin_notes;
+          document.getElementById('adminNotesSection').classList.remove('hidden');
+        } else {
+          document.getElementById('adminNotesSection').classList.add('hidden');
+        }
+
+        const area = document.getElementById('messagesArea');
+        area.innerHTML = d.messages && d.messages.length ? d.messages.map(m =>
+          `<div class="timeline-item ${m.sender==='admin'?'admin':''}">
+            <div class="timeline-sender">${m.sender==='admin'?'🛡️ Admin':'👤 Pelapor'}</div>
+            <div class="timeline-msg">${m.message}</div>
+            <div class="timeline-time">${fmtDate(m.created_at)}</div>
+          </div>`
+        ).join('') : '<p style="color:var(--text-muted);font-size:0.9rem">Belum ada pesan</p>';
+
+        document.getElementById('trackResult').classList.remove('hidden');
+      } catch(e) { showAlert('error','Gagal menghubungi server'); }
+    }
+
+    async function sendMessage() {
+      const msg = document.getElementById('newMessage').value.trim();
+      if (!msg || !currentTicket) return;
+      try {
+        await fetch('/api/reports/track/' + currentTicket + '/message', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:msg})
+        });
+        document.getElementById('newMessage').value = '';
+        trackReport();
+      } catch(e) { showAlert('error','Gagal mengirim pesan'); }
+    }
+
+    document.getElementById('ticketInput').addEventListener('keydown', e => { if(e.key==='Enter') trackReport(); });
+    const params = new URLSearchParams(location.search);
+    if (params.get('ticket')) { document.getElementById('ticketInput').value = params.get('ticket'); trackReport(); }
+  </script>
+</body>
+</html>

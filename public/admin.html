@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - WhistleGuard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="login-container">
+    <div class="card login-card">
+      <h2>🛡️ Admin Panel</h2>
+      <p class="subtitle">Masuk untuk mengelola laporan whistleblowing</p>
+      <div id="loginAlert" class="alert"></div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" class="form-control" id="loginUser" placeholder="Username" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" class="form-control" id="loginPass" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="loginBtn">🔑 Masuk</button>
+      </form>
+      <p style="text-align:center;margin-top:24px;font-size:0.85rem;color:var(--text-muted)">
+        <a href="/">← Kembali ke Beranda</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD -->
+  <div id="adminDashboard" class="hidden">
+    <nav class="navbar">
+      <a href="/" class="navbar-brand"><span class="shield">🛡️</span> WhistleGuard</a>
+      <div style="display:flex;align-items:center;gap:16px">
+        <span style="font-size:0.85rem;color:var(--text-secondary)">👤 <span id="adminName">Admin</span></span>
+        <button class="btn btn-sm btn-secondary" onclick="logout()">Keluar</button>
+      </div>
+    </nav>
+
+    <div class="admin-layout">
+      <aside class="sidebar">
+        <ul class="sidebar-menu">
+          <li><a href="#" class="active" onclick="showSection('dashboard')">📊 Dashboard</a></li>
+          <li><a href="#" onclick="showSection('reports')">📋 Semua Laporan</a></li>
+          <li><a href="#" onclick="showSection('settings')">⚙️ Ganti Password</a></li>
+        </ul>
+      </aside>
+
+      <main class="admin-main">
+        <!-- DASHBOARD SECTION -->
+        <div id="sectionDashboard">
+          <h2 style="margin-bottom:24px">📊 Dashboard Overview</h2>
+          <div class="stats-grid">
+            <div class="stat-card accent">
+              <div class="stat-value" id="statTotal">0</div>
+              <div class="stat-label">Total Laporan</div>
+            </div>
+            <div class="stat-card warning">
+              <div class="stat-value" id="statPending">0</div>
+              <div class="stat-label">Menunggu</div>
+            </div>
+            <div class="stat-card info">
+              <div class="stat-value" id="statInvestigating">0</div>
+              <div class="stat-label">Investigasi</div>
+            </div>
+            <div class="stat-card success">
+              <div class="stat-value" id="statResolved">0</div>
+              <div class="stat-label">Selesai</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h2>📋 Laporan Terbaru</h2></div>
+            <div class="table-container">
+              <table>
+                <thead><tr><th>Tiket</th><th>Subjek</th><th>Kategori</th><th>Tingkat</th><th>Status</th><th>Tanggal</th></tr></thead>
+                <tbody id="recentTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- REPORTS SECTION -->
+        <div id="sectionReports" class="hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+            <h2>📋 Semua Laporan</h2>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input type="text" class="form-control" id="searchInput" placeholder="🔍 Cari..." style="width:200px;padding:8px 12px">
+              <select class="form-control" id="filterStatus" style="width:150px;padding:8px 12px">
+                <option value="all">Semua Status</option>
+                <option value="pending">Menunggu</option>
+                <option value="investigating">Investigasi</option>
+                <option value="resolved">Selesai</option>
+                <option value="dismissed">Ditolak</option>
+              </select>
+              <select class="form-control" id="filterCategory" style="width:160px;padding:8px 12px">
+                <option value="all">Semua Kategori</option>
+                <option value="korupsi">Korupsi</option>
+                <option value="fraud">Fraud</option>
+                <option value="penyuapan">Penyuapan</option>
+                <option value="pelecehan">Pelecehan</option>
+                <option value="diskriminasi">Diskriminasi</option>
+                <option value="pelanggaran_etika">Pelanggaran Etika</option>
+                <option value="penyalahgunaan_wewenang">Penyalahgunaan Wewenang</option>
+                <option value="pelanggaran_hukum">Pelanggaran Hukum</option>
+                <option value="keselamatan_kerja">Keselamatan Kerja</option>
+                <option value="lingkungan">Lingkungan</option>
+                <option value="lainnya">Lainnya</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-container">
+              <table>
+                <thead><tr><th>Tiket</th><th>Subjek</th><th>Kategori</th><th>Tingkat</th><th>Status</th><th>📎</th><th>💬</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+                <tbody id="allReportsTable"></tbody>
+              </table>
+            </div>
+            <p id="noReports" class="hidden" style="text-align:center;color:var(--text-muted);padding:32px">Tidak ada laporan ditemukan</p>
+          </div>
+        </div>
+
+        <!-- SETTINGS SECTION -->
+        <div id="sectionSettings" class="hidden">
+          <h2 style="margin-bottom:24px">⚙️ Ganti Password Admin</h2>
+          <div class="card" style="max-width:480px">
+            <div id="pwAlert" class="alert"></div>
+            <form id="changePwForm">
+              <div class="form-group">
+                <label>Password Lama <span class="required">*</span></label>
+                <input type="password" class="form-control" id="oldPassword" placeholder="Masukkan password lama" required>
+              </div>
+              <div class="form-group">
+                <label>Password Baru <span class="required">*</span></label>
+                <input type="password" class="form-control" id="newPassword" placeholder="Minimal 6 karakter" required minlength="6">
+              </div>
+              <div class="form-group">
+                <label>Konfirmasi Password Baru <span class="required">*</span></label>
+                <input type="password" class="form-control" id="confirmPassword" placeholder="Ketik ulang password baru" required>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block" id="changePwBtn">🔒 Ubah Password</button>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal" style="max-width:720px">
+      <div class="modal-header">
+        <h3>📄 Detail Laporan</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const statusMap = {pending:'Menunggu',investigating:'Investigasi',resolved:'Selesai',dismissed:'Ditolak'};
+    const sevMap = {low:'Rendah',medium:'Sedang',high:'Tinggi',critical:'Kritis'};
+    const catMap = {korupsi:'Korupsi',fraud:'Fraud',penyuapan:'Penyuapan',pelecehan:'Pelecehan',diskriminasi:'Diskriminasi',pelanggaran_etika:'Pelanggaran Etika',penyalahgunaan_wewenang:'Penyalahgunaan Wewenang',pelanggaran_hukum:'Pelanggaran Hukum',keselamatan_kerja:'Keselamatan Kerja',lingkungan:'Lingkungan',lainnya:'Lainnya'};
+    let adminToken = localStorage.getItem('adminToken');
+
+    function fmtDate(d){return d?new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'-';}
+
+    // Check saved login
+    if(adminToken){
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      document.getElementById('adminName').textContent=localStorage.getItem('adminUser')||'Admin';
+      loadDashboard();
+    }
+
+    // LOGIN
+    document.getElementById('loginForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const btn=document.getElementById('loginBtn');
+      btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Memproses...';
+      try{
+        const res=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('loginUser').value,password:document.getElementById('loginPass').value})});
+        const data=await res.json();
+        if(data.success){
+          adminToken=data.token;
+          localStorage.setItem('adminToken',data.token);
+          localStorage.setItem('adminUser',data.username);
+          document.getElementById('adminName').textContent=data.username;
+          document.getElementById('loginScreen').classList.add('hidden');
+          document.getElementById('adminDashboard').classList.remove('hidden');
+          loadDashboard();
+        }else{
+          showLoginAlert(data.error||'Login gagal');
+        }
+      }catch(e){showLoginAlert('Gagal menghubungi server');}
+      btn.disabled=false; btn.innerHTML='🔑 Masuk';
+    });
+
+    function showLoginAlert(msg){
+      const a=document.getElementById('loginAlert');
+      a.className='alert show alert-error'; a.textContent='❌ '+msg;
+    }
+
+    function logout(){
+      adminToken=null; localStorage.removeItem('adminToken'); localStorage.removeItem('adminUser');
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('loginForm').reset();
+    }
+
+    // NAVIGATION
+    function showSection(name){
+      document.getElementById('sectionDashboard').classList.toggle('hidden',name!=='dashboard');
+      document.getElementById('sectionReports').classList.toggle('hidden',name!=='reports');
+      document.getElementById('sectionSettings').classList.toggle('hidden',name!=='settings');
+      document.querySelectorAll('.sidebar-menu a').forEach(a=>a.classList.remove('active'));
+      event.target.closest('a').classList.add('active');
+      if(name==='dashboard') loadDashboard();
+      if(name==='reports') loadReports();
+    }
+
+    // DASHBOARD
+    async function loadDashboard(){
+      try{
+        const res=await fetch('/api/admin/stats');
+        const d=await res.json();
+        document.getElementById('statTotal').textContent=d.total;
+        document.getElementById('statPending').textContent=d.pending;
+        document.getElementById('statInvestigating').textContent=d.investigating;
+        document.getElementById('statResolved').textContent=d.resolved;
+        const tb=document.getElementById('recentTable');
+        tb.innerHTML=d.recentReports.length?d.recentReports.map(r=>`
+          <tr>
+            <td><code style="color:var(--accent)">${r.ticket_id}</code></td>
+            <td>${r.subject}</td>
+            <td>${catMap[r.category]||r.category}</td>
+            <td><span class="badge badge-${r.severity==='critical'?'dismissed':r.severity==='high'?'investigating':'pending'}">${sevMap[r.severity]||r.severity}</span></td>
+            <td><span class="badge badge-${r.status}">${statusMap[r.status]||r.status}</span></td>
+            <td>${fmtDate(r.created_at)}</td>
+          </tr>
+        `).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Belum ada laporan</td></tr>';
+      }catch(e){console.error(e);}
+    }
+
+    // REPORTS LIST
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input',()=>{clearTimeout(searchTimeout);searchTimeout=setTimeout(loadReports,400);});
+    document.getElementById('filterStatus').addEventListener('change',loadReports);
+    document.getElementById('filterCategory').addEventListener('change',loadReports);
+
+    async function loadReports(){
+      const search=document.getElementById('searchInput').value;
+      const status=document.getElementById('filterStatus').value;
+      const category=document.getElementById('filterCategory').value;
+      const params=new URLSearchParams();
+      if(search) params.set('search',search);
+      if(status!=='all') params.set('status',status);
+      if(category!=='all') params.set('category',category);
+
+      try{
+        const res=await fetch('/api/admin/reports?'+params);
+        const reports=await res.json();
+        const tb=document.getElementById('allReportsTable');
+        const noR=document.getElementById('noReports');
+
+        if(!reports.length){
+          tb.innerHTML=''; noR.classList.remove('hidden'); return;
+        }
+        noR.classList.add('hidden');
+        tb.innerHTML=reports.map(r=>`
+          <tr>
+            <td><code style="color:var(--accent)">${r.ticket_id}</code></td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.subject}</td>
+            <td>${catMap[r.category]||r.category}</td>
+            <td><span class="badge badge-${r.severity==='critical'?'dismissed':r.severity==='high'?'investigating':'pending'}">${sevMap[r.severity]||r.severity}</span></td>
+            <td><span class="badge badge-${r.status}">${statusMap[r.status]||r.status}</span></td>
+            <td>${r.attachment_count||0}</td>
+            <td>${r.message_count||0}</td>
+            <td style="white-space:nowrap">${fmtDate(r.created_at)}</td>
+            <td class="table-actions">
+              <button class="btn btn-sm btn-primary" onclick="viewReport(${r.id})">Detail</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteReport(${r.id})">Hapus</button>
+            </td>
+          </tr>
+        `).join('');
+      }catch(e){console.error(e);}
+    }
+
+    // VIEW REPORT DETAIL
+    async function viewReport(id){
+      try{
+        const res=await fetch('/api/admin/reports/'+id);
+        const r=await res.json();
+        document.getElementById('modalBody').innerHTML=`
+          <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+            <div>
+              <code style="color:var(--accent);font-size:0.85rem">${r.ticket_id}</code>
+              <h3 style="margin-top:4px">${r.subject}</h3>
+            </div>
+            <span class="badge badge-${r.status}">${statusMap[r.status]||r.status}</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+            <div style="background:var(--bg-primary);padding:12px;border-radius:8px">
+              <p style="font-size:0.8rem;color:var(--text-muted)">Kategori</p>
+              <p style="font-weight:600">${catMap[r.category]||r.category}</p>
+            </div>
+            <div style="background:var(--bg-primary);padding:12px;border-radius:8px">
+              <p style="font-size:0.8rem;color:var(--text-muted)">Tingkat</p>
+              <p style="font-weight:600">${sevMap[r.severity]||r.severity}</p>
+            </div>
+            <div style="background:var(--bg-primary);padding:12px;border-radius:8px">
+              <p style="font-size:0.8rem;color:var(--text-muted)">Lokasi</p>
+              <p style="font-weight:600">${r.location||'-'}</p>
+            </div>
+            <div style="background:var(--bg-primary);padding:12px;border-radius:8px">
+              <p style="font-size:0.8rem;color:var(--text-muted)">Tanggal Kejadian</p>
+              <p style="font-weight:600">${r.date_incident||'-'}</p>
+            </div>
+          </div>
+
+          <div style="margin-bottom:20px">
+            <h4 style="margin-bottom:8px">Deskripsi</h4>
+            <p style="color:var(--text-secondary);font-size:0.9rem;white-space:pre-wrap">${r.description}</p>
+          </div>
+
+          ${r.attachments&&r.attachments.length?`
+            <div style="margin-bottom:20px">
+              <h4 style="margin-bottom:8px">📎 Lampiran (${r.attachments.length})</h4>
+              ${r.attachments.map(a=>`<div class="file-item"><span>📄 ${a.original_name} (${(a.file_size/1024).toFixed(1)} KB)</span><a href="/uploads/${a.filename}" target="_blank" class="btn btn-sm btn-secondary">Unduh</a></div>`).join('')}
+            </div>
+          `:''}
+
+          <div style="margin-bottom:20px">
+            <h4 style="margin-bottom:8px">Ubah Status</h4>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-sm ${r.status==='pending'?'btn-primary':'btn-secondary'}" onclick="updateStatus(${r.id},'pending')">Menunggu</button>
+              <button class="btn btn-sm ${r.status==='investigating'?'btn-primary':'btn-secondary'}" onclick="updateStatus(${r.id},'investigating')">Investigasi</button>
+              <button class="btn btn-sm ${r.status==='resolved'?'btn-success':'btn-secondary'}" onclick="updateStatus(${r.id},'resolved')">Selesai</button>
+              <button class="btn btn-sm ${r.status==='dismissed'?'btn-danger':'btn-secondary'}" onclick="updateStatus(${r.id},'dismissed')">Tolak</button>
+            </div>
+          </div>
+
+          <div style="margin-bottom:20px">
+            <h4 style="margin-bottom:8px">📋 Catatan Admin</h4>
+            <textarea class="form-control" id="adminNotes" style="min-height:60px">${r.admin_notes||''}</textarea>
+            <button class="btn btn-sm btn-primary mt-1" onclick="saveNotes(${r.id})">Simpan Catatan</button>
+          </div>
+
+          <div>
+            <h4 style="margin-bottom:8px">💬 Komunikasi (${r.messages?r.messages.length:0})</h4>
+            <div class="timeline" style="max-height:300px;overflow-y:auto">
+              ${r.messages&&r.messages.length?r.messages.map(m=>`
+                <div class="timeline-item ${m.sender==='admin'?'admin':''}">
+                  <div class="timeline-sender">${m.sender==='admin'?'🛡️ Admin':'👤 Pelapor'}</div>
+                  <div class="timeline-msg">${m.message}</div>
+                  <div class="timeline-time">${fmtDate(m.created_at)}</div>
+                </div>
+              `).join(''):'<p style="color:var(--text-muted);font-size:0.9rem">Belum ada pesan</p>'}
+            </div>
+            <textarea class="form-control mt-2" id="adminMessage" placeholder="Balas ke pelapor..." style="min-height:60px"></textarea>
+            <button class="btn btn-sm btn-primary mt-1" onclick="sendAdminMessage(${r.id})">Kirim Balasan</button>
+          </div>
+        `;
+        document.getElementById('detailModal').classList.add('active');
+      }catch(e){console.error(e);}
+    }
+
+    function closeModal(){document.getElementById('detailModal').classList.remove('active');}
+    document.getElementById('detailModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+    async function updateStatus(id,status){
+      await fetch('/api/admin/reports/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
+      viewReport(id); loadDashboard();
+    }
+
+    async function saveNotes(id){
+      const notes=document.getElementById('adminNotes').value;
+      await fetch('/api/admin/reports/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({admin_notes:notes})});
+      viewReport(id);
+    }
+
+    async function sendAdminMessage(id){
+      const msg=document.getElementById('adminMessage').value.trim();
+      if(!msg)return;
+      await fetch('/api/admin/reports/'+id+'/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+      viewReport(id);
+    }
+
+    async function deleteReport(id){
+      if(!confirm('Hapus laporan ini? Tindakan ini tidak dapat dibatalkan.'))return;
+      await fetch('/api/admin/reports/'+id,{method:'DELETE'});
+      loadReports(); loadDashboard();
+    }
+
+    // CHANGE PASSWORD
+    document.getElementById('changePwForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const oldPw=document.getElementById('oldPassword').value;
+      const newPw=document.getElementById('newPassword').value;
+      const confirmPw=document.getElementById('confirmPassword').value;
+      const alertBox=document.getElementById('pwAlert');
+
+      if(newPw!==confirmPw){
+        alertBox.className='alert show alert-error'; alertBox.textContent='❌ Password baru dan konfirmasi tidak cocok';
+        return;
+      }
+
+      const btn=document.getElementById('changePwBtn');
+      btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Memproses...';
+      try{
+        const res=await fetch('/api/admin/change-password',{
+          method:'PUT',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({username:localStorage.getItem('adminUser')||'admin',oldPassword:oldPw,newPassword:newPw})
+        });
+        const data=await res.json();
+        if(data.success){
+          alertBox.className='alert show alert-success'; alertBox.textContent='✅ '+data.message;
+          document.getElementById('changePwForm').reset();
+        }else{
+          alertBox.className='alert show alert-error'; alertBox.textContent='❌ '+data.error;
+        }
+      }catch(err){
+        alertBox.className='alert show alert-error'; alertBox.textContent='❌ Gagal menghubungi server';
+      }
+      btn.disabled=false; btn.innerHTML='🔒 Ubah Password';
+    });
+  </script>
+</body>
+</html>

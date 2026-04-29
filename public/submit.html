@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buat Laporan - WhistleGuard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="navbar-brand"><span class="shield">🛡️</span> WhistleGuard</a>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <ul class="nav-links">
+      <li><a href="/">Beranda</a></li>
+      <li><a href="/submit.html" class="active">Buat Laporan</a></li>
+      <li><a href="/track.html">Lacak Laporan</a></li>
+      <li><a href="/admin.html" class="btn-nav">Admin</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-container container">
+    <div class="card" style="max-width:720px; margin:0 auto">
+      <div class="card-header">
+        <h2>📝 Formulir Pelaporan Anonim</h2>
+      </div>
+
+      <div id="alertBox" class="alert"><span id="alertIcon"></span><span id="alertMsg"></span></div>
+
+      <!-- Success Result (hidden by default) -->
+      <div id="successResult" class="hidden">
+        <div class="result-card">
+          <p>✅ Laporan Berhasil Dikirim!</p>
+          <p style="font-size:0.9rem;color:var(--text-secondary);margin:8px 0">Nomor Tiket Anda:</p>
+          <div class="ticket-id" id="ticketIdResult"></div>
+          <button class="copy-btn" onclick="copyTicket()">📋 Salin Nomor Tiket</button>
+          <p style="font-size:0.85rem;color:var(--warning);margin-top:16px">⚠️ Simpan nomor tiket ini! Anda membutuhkannya untuk melacak status laporan.</p>
+        </div>
+        <div style="text-align:center;margin-top:20px">
+          <a href="/track.html" class="btn btn-primary">🔍 Lacak Laporan</a>
+          <button class="btn btn-secondary" onclick="resetForm()" style="margin-left:12px">📝 Buat Laporan Baru</button>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form id="reportForm">
+        <div class="form-group">
+          <label>Kategori Pelanggaran <span class="required">*</span></label>
+          <select class="form-control" name="category" id="category" required>
+            <option value="">-- Pilih Kategori --</option>
+            <option value="korupsi">Korupsi</option>
+            <option value="fraud">Fraud / Penipuan</option>
+            <option value="penyuapan">Penyuapan</option>
+            <option value="pelecehan">Pelecehan</option>
+            <option value="diskriminasi">Diskriminasi</option>
+            <option value="pelanggaran_etika">Pelanggaran Etika</option>
+            <option value="penyalahgunaan_wewenang">Penyalahgunaan Wewenang</option>
+            <option value="pelanggaran_hukum">Pelanggaran Hukum</option>
+            <option value="keselamatan_kerja">Keselamatan Kerja</option>
+            <option value="lingkungan">Pelanggaran Lingkungan</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Subjek Laporan <span class="required">*</span></label>
+          <input type="text" class="form-control" name="subject" id="subject" placeholder="Ringkasan singkat pelanggaran" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tingkat Keparahan</label>
+            <select class="form-control" name="severity" id="severity">
+              <option value="low">Rendah</option>
+              <option value="medium" selected>Sedang</option>
+              <option value="high">Tinggi</option>
+              <option value="critical">Kritis</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tanggal Kejadian</label>
+            <input type="date" class="form-control" name="date_incident" id="dateIncident">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Lokasi Kejadian</label>
+          <input type="text" class="form-control" name="location" id="location" placeholder="Lokasi terjadinya pelanggaran">
+        </div>
+
+        <div class="form-group">
+          <label>Deskripsi Lengkap <span class="required">*</span></label>
+          <textarea class="form-control" name="description" id="description" placeholder="Jelaskan secara detail pelanggaran yang terjadi, termasuk siapa yang terlibat, kapan, dan bagaimana kejadiannya..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Lampiran Bukti (Opsional, maks 5 file, 10MB/file)</label>
+          <div class="file-upload" id="fileUploadArea">
+            <div class="file-upload-icon">📎</div>
+            <p>Klik atau seret file ke sini</p>
+            <p style="font-size:0.8rem;color:var(--text-muted)">Format: JPG, PNG, PDF, DOC, XLS, TXT, MP3, MP4</p>
+            <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.mp3,.mp4,.wav">
+          </div>
+          <div class="file-list" id="fileList"></div>
+        </div>
+
+        <div style="background:var(--bg-primary);padding:16px;border-radius:8px;margin-bottom:20px">
+          <p style="font-size:0.85rem;color:var(--text-secondary)">🔒 <strong>Jaminan Privasi:</strong> Kami tidak mengumpulkan nama, email, atau data pribadi apapun. Laporan ini sepenuhnya anonim.</p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+          🚀 Kirim Laporan Anonim
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>🛡️ WhistleGuard &copy; 2024 — Semua laporan bersifat rahasia</p>
+  </footer>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileList = document.getElementById('fileList');
+    let selectedFiles = [];
+
+    fileUploadArea.addEventListener('click', () => fileInput.click());
+    fileUploadArea.addEventListener('dragover', e => { e.preventDefault(); fileUploadArea.style.borderColor = 'var(--accent)'; });
+    fileUploadArea.addEventListener('dragleave', () => { fileUploadArea.style.borderColor = ''; });
+    fileUploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      fileUploadArea.style.borderColor = '';
+      addFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', () => addFiles(fileInput.files));
+
+    function addFiles(files) {
+      for (const f of files) {
+        if (selectedFiles.length >= 5) break;
+        if (f.size > 10*1024*1024) { showAlert('error','File ' + f.name + ' terlalu besar (maks 10MB)'); continue; }
+        selectedFiles.push(f);
+      }
+      renderFiles();
+    }
+
+    function renderFiles() {
+      fileList.innerHTML = selectedFiles.map((f,i) => 
+        `<div class="file-item"><span>📄 ${f.name} (${(f.size/1024).toFixed(1)} KB)</span><button class="remove-file" onclick="removeFile(${i})">✕</button></div>`
+      ).join('');
+    }
+
+    function removeFile(i) { selectedFiles.splice(i,1); renderFiles(); }
+
+    function showAlert(type, msg) {
+      const box = document.getElementById('alertBox');
+      box.className = 'alert show alert-' + (type==='error'?'error':'success');
+      document.getElementById('alertIcon').textContent = type==='error'?'❌':'✅';
+      document.getElementById('alertMsg').textContent = msg;
+      setTimeout(() => box.classList.remove('show'), 5000);
+    }
+
+    function copyTicket() {
+      const id = document.getElementById('ticketIdResult').textContent;
+      navigator.clipboard.writeText(id);
+      showAlert('success','Nomor tiket berhasil disalin!');
+    }
+
+    function resetForm() {
+      document.getElementById('reportForm').reset();
+      document.getElementById('reportForm').classList.remove('hidden');
+      document.getElementById('successResult').classList.add('hidden');
+      selectedFiles = []; renderFiles();
+    }
+
+    document.getElementById('reportForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Mengirim...';
+
+      const formData = new FormData();
+      formData.append('category', document.getElementById('category').value);
+      formData.append('subject', document.getElementById('subject').value);
+      formData.append('description', document.getElementById('description').value);
+      formData.append('severity', document.getElementById('severity').value);
+      formData.append('location', document.getElementById('location').value);
+      formData.append('date_incident', document.getElementById('dateIncident').value);
+      selectedFiles.forEach(f => formData.append('attachments', f));
+
+      try {
+        const res = await fetch('/api/reports', { method:'POST', body:formData });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('ticketIdResult').textContent = data.ticket_id;
+          document.getElementById('reportForm').classList.add('hidden');
+          document.getElementById('successResult').classList.remove('hidden');
+          window.scrollTo({top:0,behavior:'smooth'});
+        } else {
+          showAlert('error', data.error || 'Gagal mengirim laporan');
+        }
+      } catch(err) {
+        showAlert('error','Terjadi kesalahan jaringan');
+      }
+      btn.disabled = false;
+      btn.innerHTML = '🚀 Kirim Laporan Anonim';
+    });
+  </script>
+</body>
+</html>
