@@ -9,7 +9,7 @@ services:
       - "3000:3000"
     volumes:
       - whistleguard-data:/app/uploads
-      - /root/whistleblowing-app/whistleblowing.db:/app/whistleblowing.db
+      - ./whistleblowing.db:/app/whistleblowing.db
     environment:
       - NODE_ENV=production
       - PORT=3000
