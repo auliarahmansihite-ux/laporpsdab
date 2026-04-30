@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  whistleguard:
+    build: .
+    container_name: whistleguard-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - whistleguard-data:/app/uploads
+      - ./whistleblowing.db:/app/whistleblowing.db
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # - ADMIN_PASSWORD=PasswordRahasiaAdmin # Aktifkan jika ingin set custom password via env
+
+volumes:
+  whistleguard-data:
+    name: whistleguard_uploads
